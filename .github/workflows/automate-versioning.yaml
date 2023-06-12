@@ -20,8 +20,8 @@ jobs:
 
       - name: Configure Git credentials
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+          git config --global user.email "mayank.sharma@sourcefuse.com"
+          git config --global user.name "mayank0202"
           git config --global credential.helper store
           git remote set-url origin https://github.com/mayank0202/automate-versioning  
 

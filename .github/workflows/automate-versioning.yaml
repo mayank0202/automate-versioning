@@ -18,6 +18,13 @@ jobs:
         with:
           node-version: 18
 
+      - name: Configure Git credentials
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global credential.helper store
+          git remote set-url origin https://github.com/mayank0202/automate-versioning  
+
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

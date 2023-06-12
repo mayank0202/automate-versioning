@@ -1,4 +1,4 @@
-name: Semantic Versioning
+name: Versioning
 
 on:
   push:
@@ -10,29 +10,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 20
-
-      - name: Install semantic-release
-        run: npm install -g semantic-release
-
-      - name: Configure Git
+      - name: Determine version
+        id: determine_version
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+          VERSION=$(git describe --abbrev=0 --tags)
+          if [[ $VERSION =~ ([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+          else
+            echo "Invalid version tag"
+            exit 1
+          fi
 
-      - name: Run semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
+          COMMIT_MESSAGES=$(git log $(git describe --abbrev=0 --tags)..HEAD --pretty=format:"%s")
+          if [[ $COMMIT_MESSAGES =~ \[MAJOR\] ]]; then
+            ((MAJOR+=1))
+            MINOR=0
+            PATCH=0
+          elif [[ $COMMIT_MESSAGES =~ \[MINOR\] ]]; then
+            ((MINOR+=1))
+            PATCH=0
+          else
+            ((PATCH+=1))
+          fi
+
+          echo "::set-output name=major::$MAJOR"
+          echo "::set-output name=minor::$MINOR"
+          echo "::set-output name=patch::$PATCH"
+
+      - name: Update version tag
         run: |
-          semantic-release pre || true
-          npm version ${PREVIOUS_TAG#v} --allow-same-version
-          git push --follow-tags
-
-      - name: Push tags
-        run: git push origin --tags
+          echo "${MAJOR}.${MINOR}.${PATCH}" > version.txt
+          git tag -a "${MAJOR}.${MINOR}.${PATCH}" -m "Version ${MAJOR}.${MINOR}.${PATCH}"
+          git push --tags

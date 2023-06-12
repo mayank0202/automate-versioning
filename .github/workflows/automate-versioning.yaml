@@ -16,21 +16,23 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 18
+          node-version: 16
 
-      - name: Configure Git credentials
+      - name: Install semantic-release
+        run: npm install -g semantic-release
+
+      - name: Configure Git
         run: |
           git config --global user.email "mayank.sharma@sourcefuse.com"
           git config --global user.name "mayank0202"
-          git config --global credential.helper store
-          git remote set-url origin https://github.com/mayank0202/automate-versioning  
 
-      - name: Semantic Release
+      - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: |
+          semantic-release pre || true
+          npm version ${PREVIOUS_TAG#v} --allow-same-version
+          git push --follow-tags
 
       - name: Push tags
-        run: |
-          git push origin main
-          git push origin --tags
+        run: git push origin --tags

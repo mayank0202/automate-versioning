@@ -23,12 +23,12 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.email "mayank.sharma@sourcefuse.com"
-          git config --global user.name "mayank0202"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
 
       - name: Run semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.github_token }}
         run: |
           semantic-release pre || true
           npm version ${PREVIOUS_TAG#v} --allow-same-version

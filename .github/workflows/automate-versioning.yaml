@@ -13,37 +13,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install terraform-bump
+        run: npm install -g terraform-bump
+
       - name: Determine version
-        id: determine_version
-        run: |
-          VERSION=$(git describe --abbrev=0 --tags)
-          if [[ $VERSION =~ ([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
-            MAJOR=${BASH_REMATCH[1]}
-            MINOR=${BASH_REMATCH[2]}
-            PATCH=${BASH_REMATCH[3]}
-          else
-            echo "Invalid version tag"
-            exit 1
-          fi
-
-          COMMIT_MESSAGES=$(git log $(git describe --abbrev=0 --tags)..HEAD --pretty=format:"%s")
-          if [[ $COMMIT_MESSAGES =~ \[MAJOR\] ]]; then
-            ((MAJOR+=1))
-            MINOR=0
-            PATCH=0
-          elif [[ $COMMIT_MESSAGES =~ \[MINOR\] ]]; then
-            ((MINOR+=1))
-            PATCH=0
-          else
-            ((PATCH+=1))
-          fi
-
-          echo "::set-output name=major::$MAJOR"
-          echo "::set-output name=minor::$MINOR"
-          echo "::set-output name=patch::$PATCH"
+        run: npx terraform-bump
 
       - name: Update version tag
         run: |
-          echo "${MAJOR}.${MINOR}.${PATCH}" > version.txt
-          git tag -a "${MAJOR}.${MINOR}.${PATCH}" -m "Version ${MAJOR}.${MINOR}.${PATCH}"
+          VERSION=$(cat .terraform-bump/release-version)
+          git tag -a "${VERSION}" -m "Version ${VERSION}"
           git push --tags

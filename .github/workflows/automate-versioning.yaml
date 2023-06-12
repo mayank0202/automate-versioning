@@ -16,16 +16,15 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Install Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-
-      - name: Install terraform-bump
-        run: npm install -g terraform-bump
+      - name: Download terraform-bump
+        run: |
+          curl -sLJO https://github.com/mrasu/terraform-bump/releases/latest/download/terraform-bump-linux-amd64.tar.gz
+          tar -xzf terraform-bump-linux-amd64.tar.gz
+          chmod +x terraform-bump
+          sudo mv terraform-bump /usr/local/bin/
 
       - name: Determine version
-        run: npx terraform-bump
+        run: terraform-bump
 
       - name: Update version tag
         run: |

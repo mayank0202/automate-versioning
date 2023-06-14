@@ -21,4 +21,4 @@ jobs:
       - name: Bump Version
         run: |
           python bump_version.py ${{ github.event.inputs.bump_type }}
-        working-directory: automate-versioning/automate-versioning
+        working-directory: .

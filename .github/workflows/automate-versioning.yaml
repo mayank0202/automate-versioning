@@ -44,10 +44,10 @@ jobs:
       - name: Bump Version
         id: bump_version
         run: |
-          previous_tag="${{ steps.get_previous_tag.outputs.previous_tag }}"
-          version_bump="${{ steps.version_bump.outputs.bump }}"
-          new_version="$(semver bump $version_bump $previous_tag)"
-          echo "::set-output name=version::$new_version"
+         previous_tag="${{ steps.get_previous_tag.outputs.previous_tag }}"
+         version_bump="${{ steps.version_bump.outputs.bump }}"
+         new_version="$(/usr/local/bin/semver bump $version_bump $previous_tag)"
+         echo "::set-output name=version::$new_version"
 
       - name: Create Tag
         id: create_tag

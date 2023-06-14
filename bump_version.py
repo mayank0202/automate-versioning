@@ -1,21 +1,22 @@
 import sys
+import semver
 
-def bump_version(version_bump, previous_version):
-    major, minor, patch = map(int, previous_version.split('.'))
-    if version_bump == 'major':
-        major += 1
-        minor = 0
-        patch = 0
-    elif version_bump == 'minor':
-        minor += 1
-        patch = 0
-    else:
-        patch += 1
-    new_version = f'{major}.{minor}.{patch}'
-    with open('version.txt', 'w') as f:
-        f.write(new_version)
+bump_type = sys.argv[1]
 
-if __name__ == '__main__':
-    version_bump = sys.argv[1]
-    previous_version = sys.argv[2]
-    bump_version(version_bump, previous_version)
+# Read the previous version from the version.txt file
+with open("version.txt", "r") as file:
+    previous_version = file.read().strip()
+
+# Bump the version
+if bump_type == "major":
+    new_version = semver.bump_major(previous_version)
+elif bump_type == "minor":
+    new_version = semver.bump_minor(previous_version)
+else:
+    new_version = semver.bump_patch(previous_version)
+
+# Write the new version to the version.txt file
+with open("version.txt", "w") as file:
+    file.write(new_version)
+
+print(new_version)

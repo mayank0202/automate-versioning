@@ -15,16 +15,19 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: Install Dependencies
+        run: pip install -r requirements.txt    
+
       - name: Install semver
         run: pip install semver
 
       - name: Get Latest Commit Message
         run: |
           latest_commit_message=$(git log -1 --pretty=%B)
-          echo "::set-output name=commit_message::$latest_commit_message"
+         echo "::set-output name=commit_message::$latest_commit_message"
         id: commit_message
 
       - name: Bump Version
         run: |
-          python bump_version.py "${{ steps.commit_message.outputs.commit_message }}" "${{ steps.previous_tag.outputs.tag }}"
+         python bump_version.py "${{ steps.commit_message.outputs.commit_message }}" "${{ steps.previous_tag.outputs.tag }}"
         id: bump_version

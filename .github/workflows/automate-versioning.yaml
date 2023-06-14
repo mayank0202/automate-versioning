@@ -13,6 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install semver
+        run: npm install --global semver
+
       - name: Bump Version
         run: |
           # Get the latest commit message

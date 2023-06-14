@@ -1,22 +1,41 @@
 import sys
 import semver
+from github import Github
 
-bump_type = sys.argv[1]
+# Get the commit message from the latest commit
+latest_commit_message = sys.argv[1]
 
-# Read the previous version from the version.txt file
-with open("version.txt", "r") as file:
-    previous_version = file.read().strip()
+# Get the previous tag
+previous_tag = sys.argv[2]
 
-# Bump the version
-if bump_type == "major":
-    new_version = semver.bump_major(previous_version)
-elif bump_type == "minor":
-    new_version = semver.bump_minor(previous_version)
+# Check if the latest commit message contains a version bump indicator
+if '#major' in latest_commit_message:
+    bump_type = 'major'
+elif '#minor' in latest_commit_message:
+    bump_type = 'minor'
+elif '#patch' in latest_commit_message:
+    bump_type = 'patch'
 else:
-    new_version = semver.bump_patch(previous_version)
+    # If no version bump indicator is found, search the previous commits
+    g = Github()
+    repo = g.get_repo('your/repo')  # Replace with your repository information
 
-# Write the new version to the version.txt file
-with open("version.txt", "w") as file:
-    file.write(new_version)
+    # Iterate through previous commits
+    for commit in repo.get_commits():
+        commit_message = commit.commit.message
+        if '#major' in commit_message:
+            bump_type = 'major'
+            break
+        elif '#minor' in commit_message:
+            bump_type = 'minor'
+            break
+        elif '#patch' in commit_message:
+            bump_type = 'patch'
+            break
+    else:
+        # If no suitable indicator is found in any previous commit, default to 'patch'
+        bump_type = 'patch'
 
+# Bump the version based on the identified bump type
+new_version = semver.bump_version(previous_tag, bump_type)
 print(new_version)

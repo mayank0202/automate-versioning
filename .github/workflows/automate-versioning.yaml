@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+      
+      - name: Install semver
+        run: npm install --global semver
 
       - name: Extract Commit Messages
         id: extract_messages

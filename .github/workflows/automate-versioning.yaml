@@ -12,9 +12,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-      
+
       - name: Install semver
         run: npm install --global semver
+
+      - name: Fetch Tags
+        run: git fetch --tags
 
       - name: Extract Commit Messages
         id: extract_messages
@@ -36,7 +39,6 @@ jobs:
       - name: Get Previous Tag
         id: get_previous_tag
         run: |
-          git fetch --tags
           echo "::set-output name=previous_tag::$(git describe --abbrev=0 --tags)"
 
       - name: Bump Version

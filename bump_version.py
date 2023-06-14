@@ -11,8 +11,9 @@ def get_version_from_commit_message(commit_message):
     pattern = r"#(\d+\.\d+\.\d+)"
     matches = re.findall(pattern, commit_message)
     if matches:
-        return matches[-1]  # Return the last match
+        return matches[0]  # Return the first match
     return None
+
 
 def bump_version(previous_version, bump_type):
     major, minor, patch = previous_version.split('.')

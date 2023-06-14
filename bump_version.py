@@ -1,4 +1,18 @@
 import sys
+import subprocess
+import re
+
+def get_latest_commit_message():
+    command = ["git", "log", "-1", "--pretty=format:%s"]
+    result = subprocess.run(command, capture_output=True, text=True)
+    return result.stdout.strip()
+
+def get_version_from_commit_message(commit_message):
+    pattern = r"#([a-zA-Z]+)"
+    matches = re.findall(pattern, commit_message)
+    if matches:
+        return matches[-1].lower()  # Return the last match
+    return None
 
 def bump_version(previous_version, bump_type):
     major, minor, patch = previous_version.split('.')
@@ -20,7 +34,12 @@ def bump_version(previous_version, bump_type):
 
 if __name__ == "__main__":
     bump_type = sys.argv[1]
-    previous_version = sys.argv[2]
+    latest_commit_message = get_latest_commit_message()
+    previous_version = get_version_from_commit_message(latest_commit_message)
+    
+    if previous_version is None:
+        print("No version tag found in the commit message.")
+        sys.exit(1)
     
     new_version = bump_version(previous_version, bump_type)
     print(new_version)

@@ -1,52 +1,24 @@
-name: Auto Versioning
-
+name: Version Bump
 on:
   push:
     branches:
       - main
-
 jobs:
   bump_version:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.x
 
-      - name: Get previous tag
-        id: get_previous_tag
-        run: echo "::set-output name=previous_tag::$(git describe --abbrev=0 --tags)"
+      - name: Install semver
+        run: pip install semver
 
-      - name: Determine version bump
-        id: version_bump
+      - name: Bump Version
         run: |
-          previous_tag="${{ steps.get_previous_tag.outputs.previous_tag }}"
-          commit_messages="$(git log --pretty=%B ${previous_tag}..HEAD)"
-          if [[ $commit_messages =~ \#major ]]; then
-            echo "::set-output name=bump::major"
-          elif [[ $commit_messages =~ \#minor ]]; then
-            echo "::set-output name=bump::minor"
-          else
-            echo "::set-output name=bump::patch"
-          fi
-
-      - name: Bump version
-        id: bump_version
-        run: |
-          previous_tag="${{ steps.get_previous_tag.outputs.previous_tag }}"
-          version_bump="${{ steps.version_bump.outputs.bump }}"
-          python bump_version.py $version_bump $previous_tag
-          new_version=$(cat version.txt)
-          echo "::set-output name=version::$new_version"
-
-      - name: Create tag
-        if: steps.bump_version.outputs.version != ''
-        run: |
-          new_version="${{ steps.bump_version.outputs.version }}"
-          git tag $new_version
-          git push origin $new_version
+          python bump_version.py ${{ github.event.inputs.bump_type }}
+        working-directory: automate-versioning/automate-versioning

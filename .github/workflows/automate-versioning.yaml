@@ -1,72 +1,43 @@
-name: Version Tagging
-
+name: Increment Version Tag
 on:
   push:
     branches:
       - main
 
 jobs:
-  tag_version:
+  increment-version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install commit-linter
-        run: pip install commit-linter
+      - name: Get current version
+        uses: reecetech/version-increment@2023.4.1
+        id: version
+        with:
+          scheme: semver
+          increment: patch
 
-      - name: Lint commits
-        run: commit-linter --path .
-
-      - name: Determine version update
-        id: determine_version_update
+      - name: Check commit message
         run: |
-          commits=$(git log --pretty=oneline ${{ github.event.before }}..${{ github.sha }} | tail -n 10)
-          echo "::set-output name=commit_messages::$commits"
+          commit_message=$(cat "${GITHUB_REF}" | head -n 1)
+          if [[ "${commit_message}" =~ "feat" ]]; then
+            version=$(echo "${{ steps.version.outputs.version }}" | sed 's/\.[0-9]*$//')
+            echo "Incrementing major version to ${version}."
+            version=$(expr "${version}" + 1)
+          elif [[ "${commit_message}" =~ "fix" ]]; then
+            version=$(echo "${{ steps.version.outputs.version }}" | sed 's/\.[0-9]*$//')
+            echo "Incrementing minor version to ${version}."
+            version=$(expr "${version}" + 1)
+          else
+            echo "No version increment needed."
+          fi
 
-      - name: Get latest tag
-        id: get_latest_tag
+      - name: Increment version tag
         run: |
-          latest_tag=$(git describe --abbrev=0 --tags || echo "0.0.0")
-          latest_tag=${latest_tag#v}
-          echo "::set-output name=latest_tag::$latest_tag"
+          echo "Tagging version ${version}"
+          git tag "${version}"
 
-      - name: Calculate version
-        id: calculate_version
+      - name: Push tag
         run: |
-          python3 - <<EOF
-          import re
-          from distutils.version import StrictVersion
-
-          commits = '${{ steps.determine_version_update.outputs.commit_messages }}'.splitlines()
-          major_count = 0
-          minor_count = 0
-          patch_count = 0
-
-          for commit in commits:
-              if re.search(r'\bfeat\b', commit):
-                  minor_count += 1
-              elif re.search(r'\bfix\b', commit):
-                  patch_count += 1
-              else:
-                  patch_count += 1
-
-          latest_tag = '${{ steps.get_latest_tag.outputs.latest_tag }}'
-          version = StrictVersion(latest_tag)
-
-          if major_count > 0:
-              version = version.bump_major()
-          elif minor_count > 0:
-              version = version.bump_minor()
-          elif patch_count > 0:
-              version = version.bump_patch()
-
-          print(version)
-          print('::set-output name=version::{}'.format(version))
-          EOF
-
-      - name: Create version tag
-        run: git tag ${{ steps.calculate_version.outputs.version }}
-
-      - name: Push version tag
-        run: git push origin ${{ steps.calculate_version.outputs.version }}
+          git push origin "${version}"

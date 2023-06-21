@@ -16,7 +16,6 @@ jobs:
         id: version
         with:
           scheme: semver
-          increment: patch
 
       - name: Check commit message
         run: |
@@ -25,21 +24,33 @@ jobs:
             version=$(echo "${{ steps.version.outputs.version }}" | sed 's/\.[0-9]*$//')
             echo "Incrementing major version to ${version}."
             version=$(expr "${version}" + 1)
+            tag_name="v${version}"
           elif [[ "${commit_message}" =~ "fix" ]]; then
             version=$(echo "${{ steps.version.outputs.version }}" | sed 's/\.[0-9]*$//')
             echo "Incrementing minor version to ${version}."
             version=$(expr "${version}" + 1)
+            tag_name="v${version}"
+          elif [[ "${commit_message}" =~ "docs" ]]; then
+            version=$(echo "${{ steps.version.outputs.version }}")
+            echo "Patch version to ${version}."
+            version=$(echo "${version}" | sed 's/\.[0-9]*$//')
+            version=$(expr "${version}" + 1)
+            tag_name="v${version}"
           elif [[ "${commit_message}" =~ "chore" ]]; then
-            echo "No version increment needed."
+            version=$(echo "${{ steps.version.outputs.version }}")
+            echo "Patch version to ${version}."
+            version=$(echo "${version}" | sed 's/\.[0-9]*$//')
+            version=$(expr "${version}" + 1)
+            tag_name="v${version}"
           else
             echo "Unknown commit type, skipping version increment."
           fi
 
       - name: Increment version tag
         run: |
-          echo "Tagging version ${{ steps.version.outputs.version }}"
-          git tag "${{ steps.version.outputs.version }}"
+          echo "Tagging version ${{ tag_name }}"
+          git tag "${{ tag_name }}"
 
       - name: Push tag
         run: |
-          git push origin "${{ steps.version.outputs.version }}"
+          git push origin "${{ tag_name }}"

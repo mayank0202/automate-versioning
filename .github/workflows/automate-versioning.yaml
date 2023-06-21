@@ -1,30 +1,63 @@
-name: Version Bump
-"on":
+name: Version Tagging
+
+on:
   push:
     branches:
       - main
+
 jobs:
-  bump_version:
+  tag_version:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: Install semver
-        run: pip install semver
-      - name: Get Latest Commit Message
+
+      - name: Install commit-linter
+        run: pip install commit-linter
+
+      - name: Lint commits
+        run: commit-linter --path .
+
+      - name: Determine version update
+        id: determine_version_update
         run: |
-          latest_commit_message=$(git log -1 --pretty=%B)
-          echo "::set-output name=commit_message::$latest_commit_message"
-        id: commit_message
-      - name: Bump Version
-        run: >
-          python bump_version.py "${{
-          steps.commit_message.outputs.commit_message }}" "${{
-          steps.previous_tag.outputs.tag }}"
-        id: bump_version
+          commits=$(git log --pretty=oneline ${{ github.event.before }}..${{ github.sha }})
+          echo "::set-output name=commit_messages::$commits"
+
+      - name: Calculate version
+        id: calculate_version
+        run: |
+          python3 - <<EOF
+          import re
+          from distutils.version import StrictVersion
+
+          commits = '${{ steps.determine_version_update.outputs.commit_messages }}'.splitlines()
+          major_count = 0
+          minor_count = 0
+          patch_count = 0
+
+          for commit in commits:
+              if re.search(r'\bfeat\b', commit):
+                  minor_count += 1
+              elif re.search(r'\bfix\b', commit):
+                  patch_count += 1
+              else:
+                  patch_count += 1
+
+          version = StrictVersion('1.0.0')
+          if major_count > 0:
+              version = version.bump_major()
+          elif minor_count > 0:
+              version = version.bump_minor()
+          elif patch_count > 0:
+              version = version.bump_patch()
+
+          print(version)
+          print('::set-output name=version::{}'.format(version))
+          EOF
+
+      - name: Create version tag
+        run: git tag ${{ steps.calculate_version.outputs.version }}
+
+      - name: Push version tag
+        run: git push origin ${{ steps.calculate_version.outputs.version }}

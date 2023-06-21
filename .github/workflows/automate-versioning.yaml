@@ -24,6 +24,12 @@ jobs:
           commits=$(git log --pretty=oneline ${{ github.event.before }}..${{ github.sha }} | tail -n 10)
           echo "::set-output name=commit_messages::$commits"
 
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --abbrev=0 --tags)
+          echo "::set-output name=latest_tag::$latest_tag"
+
       - name: Calculate version
         id: calculate_version
         run: |
@@ -44,7 +50,12 @@ jobs:
               else:
                   patch_count += 1
 
-          version = StrictVersion('1.0.0')
+          latest_tag = '${{ steps.get_latest_tag.outputs.latest_tag }}'
+          if latest_tag:
+              version = StrictVersion(latest_tag)
+          else:
+              version = StrictVersion('1.0')
+
           if major_count > 0:
               version = version.bump_major()
           elif minor_count > 0:

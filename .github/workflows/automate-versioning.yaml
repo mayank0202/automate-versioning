@@ -27,7 +27,7 @@ jobs:
       - name: Get latest tag
         id: get_latest_tag
         run: |
-          latest_tag=$(git describe --abbrev=0 --tags)
+          latest_tag=$(git describe --abbrev=0 --tags || echo "v0.0.0")
           echo "::set-output name=latest_tag::$latest_tag"
 
       - name: Calculate version
@@ -51,10 +51,7 @@ jobs:
                   patch_count += 1
 
           latest_tag = '${{ steps.get_latest_tag.outputs.latest_tag }}'
-          if latest_tag:
-              version = StrictVersion(latest_tag)
-          else:
-              version = StrictVersion('1.0')
+          version = StrictVersion(latest_tag)
 
           if major_count > 0:
               version = version.bump_major()

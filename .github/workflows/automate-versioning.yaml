@@ -37,8 +37,8 @@ jobs:
 
       - name: Increment version tag
         run: |
-          echo "Tagging version ${version}"
-          git tag "${version}"
+          echo "Tagging version ${{ steps.version.outputs.version }}"
+          git tag "${{ steps.version.outputs.version }}"
 
       - name: Push tag
         run: |

@@ -2,7 +2,7 @@ name: Increment Version Tag
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   increment-version:

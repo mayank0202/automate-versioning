@@ -21,7 +21,7 @@ jobs:
       - name: Determine version update
         id: determine_version_update
         run: |
-          commits=$(git log --pretty=oneline ${{ github.event.before }}..${{ github.sha }})
+          commits=$(git log --pretty=oneline ${{ github.event.before }}..${{ github.sha }} | tail -n 10)
           echo "::set-output name=commit_messages::$commits"
 
       - name: Calculate version

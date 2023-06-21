@@ -17,7 +17,6 @@ jobs:
         id: version
         with:
           scheme: semver
-          increment: patch
 
       - name: Increment version tag
         run: |

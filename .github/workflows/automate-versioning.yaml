@@ -1,9 +1,8 @@
----
 name: Increment Version Tag
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   increment-version:
@@ -17,11 +16,29 @@ jobs:
         id: version
         with:
           scheme: semver
+          increment: patch
+
+      - name: Check commit message
+        run: |
+          commit_message=$(cat "${GITHUB_REF}" | head -n 1)
+          if [[ "${commit_message}" =~ "feat" ]]; then
+            version=$(echo "${{ steps.version.outputs.version }}" | sed 's/\.[0-9]*$//')
+            echo "Incrementing major version to ${version}."
+            version=$(expr "${version}" + 1)
+          elif [[ "${commit_message}" =~ "fix" ]]; then
+            version=$(echo "${{ steps.version.outputs.version }}" | sed 's/\.[0-9]*$//')
+            echo "Incrementing minor version to ${version}."
+            version=$(expr "${version}" + 1)
+          elif [[ "${commit_message}" =~ "chore" ]]; then
+            echo "No version increment needed."
+          else
+            echo "Unknown commit type, skipping version increment."
+          fi
 
       - name: Increment version tag
         run: |
-          echo "Tagging version ${{ steps.version.outputs.version }}"
-          git tag "${{ steps.version.outputs.version }}"
+          echo "Tagging version ${version}"
+          git tag "${version}"
 
       - name: Push tag
         run: |
